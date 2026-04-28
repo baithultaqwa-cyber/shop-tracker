@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Finance Tracker</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { font-size: 0.9em; color: #666; }
+        .val { font-weight: bold; font-size: 1.2em; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h3>Log Daily Totals</h3>
+    <input type="number" id="revenue" placeholder="Today's Revenue">
+    <input type="number" id="expenses" placeholder="Today's Daily Expenses">
+    <button onclick="sendData()">Save to Sheet</button>
+</div>
+
+<div class="card">
+    <h3>Monthly Shares (After Fixed Costs)</h3>
+    <div class="grid">
+        <div class="stat">Net Profit: <br><span class="val" id="netProfit">...</span></div>
+        <div class="stat">Operator (10%): <br><span class="val" id="operator">...</span></div>
+        <div class="stat">Partner 1 (30%): <br><span class="val" id="p1">...</span></div>
+        <div class="stat">Partner 2 (30%): <br><span class="val" id="p2">...</span></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxvtg6RMdiCIR4tfYlTbwg1PcF2ROHFQnLXSrj-zS_loz51Cm2vOpUlYZ2MF_WubyA6BA/exec";
+
+    async function sendData() {
+        const payload = {
+            revenue: document.getElementById('revenue').value,
+            expenses: document.getElementById('expenses').value
+        };
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Saved!");
+        location.reload();
+    }
+
+    async function fetchData() {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        document.getElementById('netProfit').innerText = "$" + data.netProfit.toFixed(2);
+        document.getElementById('operator').innerText = "$" + data.operator.toFixed(2);
+        document.getElementById('p1').innerText = "$" + data.p1.toFixed(2);
+        document.getElementById('p2').innerText = "$" + data.p2.toFixed(2);
+        document.getElementById('p3').innerText = "$" + data.p3.toFixed(2);
+    }
+    fetchData();
+</script>
+</body>
+</html>
