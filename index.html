@@ -3,59 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Finance Tracker</title>
+    <title>بوفية زمان هوزان - Expense Tracker</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat { font-size: 0.9em; color: #666; }
-        .val { font-weight: bold; font-size: 1.2em; color: #333; }
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --bg: #f4f7f6;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--primary);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: #d35400; /* Distinct color for shop name */
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        h3 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--secondary);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #219150;
+        }
+
+        .shares-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+
+        .full-width {
+            grid-column: span 2;
+            background: #eef9f1;
+            border-color: #d4edda;
+        }
+
+        .label {
+            display: block;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .value {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 14px;
+            color: #95a5a6;
+        }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h3>Log Daily Totals</h3>
-    <input type="number" id="revenue" placeholder="Today's Revenue">
-    <input type="number" id="expenses" placeholder="Today's Daily Expenses">
-    <button onclick="sendData()">Save to Sheet</button>
-</div>
+<div class="container">
+    <div class="header">
+        <h1>بوفية زمان هوزان</h1>
+        <p>Finance Management System</p>
+    </div>
 
-<div class="card">
-    <h3>Monthly Shares (After Fixed Costs)</h3>
-    <div class="grid">
-        <div class="stat">Net Profit: <br><span class="val" id="netProfit">...</span></div>
-        <div class="stat">Operator (10%): <br><span class="val" id="operator">...</span></div>
-        <div class="stat">Partner 1 (30%): <br><span class="val" id="p1">...</span></div>
-        <div class="stat">Partner 2 (30%): <br><span class="val" id="p2">...</span></div>
+    <div class="card">
+        <h3>Daily Entry</h3>
+        <div class="input-group">
+            <label>Daily Revenue</label>
+            <input type="number" id="revenue" placeholder="0.00 SAR" required>
+        </div>
+        <div class="input-group">
+            <label>Daily Expenses (Operational)</label>
+            <input type="number" id="expenses" placeholder="0.00 SAR" required>
+        </div>
+        <button onclick="sendData()" id="submitBtn">Save Entry</button>
+    </div>
+
+    <div class="card">
+        <h3>Monthly Shares Summary</h3>
+        <div id="loading">Updating calculations...</div>
+        <div class="shares-grid" id="displayArea" style="display: none;">
+            <div class="stat-box full-width">
+                <span class="label">Total Net Profit</span>
+                <span class="value" id="netProfit">0.00 SAR</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Operator (10%)</span>
+                <span class="value" id="operator">0.00 SAR</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Partner 1 (30%)</span>
+                <span class="value" id="p1">0.00 SAR</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Partner 2 (30%)</span>
+                <span class="value" id="p2">0.00 SAR</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Partner 3 (30%)</span>
+                <span class="value" id="p3">0.00 SAR</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxvtg6RMdiCIR4tfYlTbwg1PcF2ROHFQnLXSrj-zS_loz51Cm2vOpUlYZ2MF_WubyA6BA/exec";
+    // Replace with your Google Apps Script Web App URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbxXYtbP1N_3ZxAuqp_u6BBXNO41sBuDJEMPqoWXZkZhYujjeQUPrC69QMCgwHmthSxjiA/exec";
 
     async function sendData() {
-        const payload = {
-            revenue: document.getElementById('revenue').value,
-            expenses: document.getElementById('expenses').value
-        };
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        alert("Saved!");
-        location.reload();
+        const rev = document.getElementById('revenue').value;
+        const exp = document.getElementById('expenses').value;
+        const btn = document.getElementById('submitBtn');
+
+        if (!rev || !exp) {
+            alert("Please enter values for both fields.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Saving...";
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Essential for Google Apps Script
+                body: JSON.stringify({ revenue: rev, expenses: exp })
+            });
+            alert("Daily data saved successfully!");
+            location.reload();
+        } catch (error) {
+            console.error(error);
+            alert("Error connecting to the database.");
+            btn.disabled = false;
+            btn.innerText = "Save Entry";
+        }
     }
 
     async function fetchData() {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        document.getElementById('netProfit').innerText = "$" + data.netProfit.toFixed(2);
-        document.getElementById('operator').innerText = "$" + data.operator.toFixed(2);
-        document.getElementById('p1').innerText = "$" + data.p1.toFixed(2);
-        document.getElementById('p2').innerText = "$" + data.p2.toFixed(2);
-        document.getElementById('p3').innerText = "$" + data.p3.toFixed(2);
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+
+            // Format numbers to 2 decimal places with SAR suffix
+            const formatSAR = (val) => Number(val).toLocaleString(undefined, {minimumFractionDigits: 2}) + " SAR";
+
+            document.getElementById('netProfit').innerText = formatSAR(data.netProfit);
+            document.getElementById('operator').innerText = formatSAR(data.operator);
+            document.getElementById('p1').innerText = formatSAR(data.p1);
+            document.getElementById('p2').innerText = formatSAR(data.p2);
+            document.getElementById('p3').innerText = formatSAR(data.p3);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('displayArea').style.display = 'grid';
+        } catch (error) {
+            document.getElementById('loading').innerText = "Error loading monthly totals.";
+            console.error(error);
+        }
     }
+
+    // Initialize fetch on page load
     fetchData();
 </script>
+
 </body>
 </html>
