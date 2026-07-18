@@ -112,6 +112,18 @@
   }
   .tab.active { background: var(--series-revenue); color: #fff; }
 
+  .month-nav {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    margin: -6px 0 18px;
+  }
+  .nav-btn {
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary);
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .nav-btn:hover:not(:disabled) { color: var(--text-primary); }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .month-label { font-size: 14px; font-weight: 700; color: var(--text-primary); min-width: 140px; text-align: center; }
+
   .kpi-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;
   }
@@ -235,6 +247,12 @@
       <button class="tab" data-period="all">All Time</button>
     </div>
 
+    <div class="month-nav hidden" id="monthNav">
+      <button class="nav-btn" id="prevMonthBtn" aria-label="Previous month">‹ Prev</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="nav-btn" id="nextMonthBtn" aria-label="Next month">Next ›</button>
+    </div>
+
     <div class="kpi-grid" id="kpiGrid"></div>
 
     <div class="card">
@@ -317,7 +335,7 @@
 (function () {
   var STORAGE_KEY = 'shopTrackerApiUrl';
   var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbx3qmy7UoQxDQqf8RHAPcjcMeJAtcdVIfEuke6MRUFWTEmJu-yOgPMPYkdpWO8yQj-YzA/exec';
-  var state = { data: null, period: 'daily', editingDate: null };
+  var state = { data: null, period: 'daily', editingDate: null, selectedMonth: null };
   var chart = null;
 
   function apiUrl() { return localStorage.getItem(STORAGE_KEY) || DEFAULT_API_URL; }
@@ -461,6 +479,16 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   }
 
+  var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function monthLabel(month) {
+    var y = month.slice(0, 4), m = Number(month.slice(5, 7)) - 1;
+    return MONTH_NAMES[m] + ' ' + y;
+  }
+
+  function availableMonths() {
+    return state.data.monthly.map(function (m) { return m.month; }).sort();
+  }
+
   // ---------- KPI rendering ----------
   function deltaEl(current, previous) {
     var span = document.createElement('div');
@@ -504,11 +532,11 @@
       grid.appendChild(makeTile('Today Profit', cur.profit, prev.profit));
       grid.appendChild(makeTile('Yesterday Profit', prev.profit));
     } else if (period === 'monthly') {
-      var month = monthOf(today);
+      var month = state.selectedMonth || monthOf(today);
       var row = monthlyRow(month) || { revenue: 0, dailyExpenses: 0, fixedExpenses: state.data.fixedExpensesTotal, actualProfit: 0 };
       var prevMonth = shiftMonth(month, -1);
       var prevRow = monthlyRow(prevMonth) || { revenue: 0, dailyExpenses: 0, actualProfit: 0 };
-      document.getElementById('chartTitle').textContent = 'This Month — Day by Day';
+      document.getElementById('chartTitle').textContent = monthLabel(month) + ' — Day by Day';
       grid.appendChild(makeTile('Month Revenue', row.revenue, prevRow.revenue));
       grid.appendChild(makeTile('Month Expenses', row.dailyExpenses + row.fixedExpenses, prevRow.dailyExpenses + (prevRow.fixedExpenses || 0)));
       grid.appendChild(makeTile('Actual Profit', row.actualProfit, prevRow.actualProfit));
@@ -548,7 +576,7 @@
       };
     }
     if (period === 'monthly') {
-      var month = monthOf(today);
+      var month = state.selectedMonth || monthOf(today);
       var rows = state.data.daily.filter(function (d) { return monthOf(d.date) === month; });
       return {
         labels: rows.map(function (d) { return d.date.slice(8); }),
@@ -744,16 +772,42 @@
         document.querySelectorAll('#periodTabs .tab').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         state.period = btn.dataset.period;
+        document.getElementById('monthNav').classList.toggle('hidden', state.period !== 'monthly');
         renderKPIs();
         renderChart();
       });
     });
   }
 
+  // ---------- Month nav ----------
+  function renderMonthNav() {
+    var months = availableMonths();
+    document.getElementById('monthLabel').textContent = monthLabel(state.selectedMonth);
+    document.getElementById('prevMonthBtn').disabled = !months.length || state.selectedMonth <= months[0];
+    document.getElementById('nextMonthBtn').disabled = !months.length || state.selectedMonth >= months[months.length - 1];
+  }
+
+  function initMonthNav() {
+    document.getElementById('prevMonthBtn').addEventListener('click', function () {
+      state.selectedMonth = shiftMonth(state.selectedMonth, -1);
+      renderMonthNav();
+      renderKPIs();
+      renderChart();
+    });
+    document.getElementById('nextMonthBtn').addEventListener('click', function () {
+      state.selectedMonth = shiftMonth(state.selectedMonth, 1);
+      renderMonthNav();
+      renderKPIs();
+      renderChart();
+    });
+  }
+
   function renderAll() {
     if (!document.getElementById('entryDate').value) document.getElementById('entryDate').value = todayStr();
+    if (!state.selectedMonth) state.selectedMonth = monthOf(todayStr());
     renderKPIs();
     renderChart();
+    renderMonthNav();
     renderRecentEntries();
     renderShares();
     renderFixed();
@@ -764,6 +818,7 @@
   initTheme();
   initSettings();
   initTabs();
+  initMonthNav();
   initForm();
   initTableToggle();
   document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
