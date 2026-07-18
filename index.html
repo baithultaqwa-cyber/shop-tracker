@@ -1,253 +1,774 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوفية زمان هوزان - Expense Tracker</title>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #27ae60;
-            --bg: #f4f7f6;
-            --text: #333;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بوفية زمان هوزان — Business Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --surface-2:      #ffffff;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
+    --series-revenue: #2a78d6;
+    --series-expense: #eb6834;
+    --series-profit:  #4a3aa7;
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
+    --good:     #0ca30c;
+    --critical: #d03b3b;
+    --warning:  #fab219;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --surface-2:      #201f1e;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
 
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            color: var(--primary);
-        }
+    --series-revenue: #3987e5;
+    --series-expense: #d95926;
+    --series-profit:  #9085e9;
 
-        .header h1 {
-            margin: 0;
-            font-size: 32px;
-            color: #d35400; /* Distinct color for shop name */
-        }
+    --good:     #0ca30c;
+    --critical: #e66767;
+    --warning:  #fab219;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --surface-2:      #201f1e;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
 
-        .card {
-            background: #ffffff;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-        }
+      --series-revenue: #3987e5;
+      --series-expense: #d95926;
+      --series-profit:  #9085e9;
+      --critical: #e66767;
+    }
+  }
 
-        h3 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            color: var(--primary);
-        }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
 
-        .input-group {
-            margin-bottom: 15px;
-        }
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  header.top h1 { margin: 0; font-size: 22px; color: #d35400; }
+  header.top .sub { margin: 2px 0 0; font-size: 13px; color: var(--text-secondary); }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .icon-btn:hover { color: var(--text-primary); }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-        }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .card h3 {
+    margin: 0 0 14px; font-size: 14px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em;
+  }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-            outline: none;
-            transition: border 0.3s;
-        }
+  .tabs {
+    display: inline-flex; gap: 4px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 18px;
+  }
+  .tab {
+    border: none; background: transparent; color: var(--text-secondary);
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .tab.active { background: var(--series-revenue); color: #fff; }
 
-        input:focus {
-            border-color: var(--secondary);
-        }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;
+  }
+  .stat-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px;
+  }
+  .stat-tile .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .stat-tile .value {
+    font-size: 24px; font-weight: 700; margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-tile .delta { font-size: 12px; margin-top: 6px; font-weight: 600; }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--critical); }
+  .delta.flat { color: var(--text-muted); }
+  .value.negative { color: var(--critical); }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--secondary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
+  .chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .chart-head h3 { margin: 0; }
+  .link-btn { background: none; border: none; color: var(--series-revenue); font-size: 12px; cursor: pointer; font-weight: 600; }
+  .chart-wrap { position: relative; height: 280px; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-        button:hover {
-            background-color: #219150;
-        }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .03em; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--surface-2); }
+  .table-scroll { max-height: 340px; overflow-y: auto; }
 
-        .shares-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; }
 
-        .stat-box {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid #eee;
-        }
+  form.entry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .field input {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-primary); font-size: 14px; outline: none;
+  }
+  .field input:focus { border-color: var(--series-revenue); }
+  button.primary {
+    grid-column: span 3; padding: 12px; border: none; border-radius: 8px;
+    background: var(--series-revenue); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(0.95); }
+  button.secondary {
+    grid-column: span 3; padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+    background: transparent; color: var(--text-secondary); font-size: 12px; cursor: pointer;
+  }
+  .form-note { grid-column: span 3; font-size: 12px; color: var(--text-muted); }
+  .form-editing-badge {
+    grid-column: span 3; font-size: 12px; background: var(--warning); color: #1a1a19;
+    padding: 6px 10px; border-radius: 6px; font-weight: 600;
+  }
 
-        .full-width {
-            grid-column: span 2;
-            background: #eef9f1;
-            border-color: #d4edda;
-        }
+  .shares-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .share-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .share-box .who { font-size: 12px; color: var(--text-muted); }
+  .share-box .amt { font-size: 16px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
 
-        .label {
-            display: block;
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+  .fixed-list { display: flex; flex-direction: column; gap: 8px; }
+  .fixed-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .fixed-row .name { color: var(--text-secondary); }
+  .fixed-total { display: flex; justify-content: space-between; font-weight: 700; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--grid); }
 
-        .value {
-            display: block;
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary);
-        }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--text-primary); color: var(--page); padding: 10px 18px;
+    border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; }
 
-        #loading {
-            text-align: center;
-            font-size: 14px;
-            color: #95a5a6;
-        }
-    </style>
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex;
+    align-items: center; justify-content: center; z-index: 100; padding: 16px;
+  }
+  .modal { background: var(--surface-1); border-radius: 14px; padding: 22px; max-width: 420px; width: 100%; }
+  .modal h2 { margin-top: 0; font-size: 17px; }
+  .modal p { font-size: 13px; color: var(--text-secondary); }
+  .modal input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-primary); margin: 10px 0; }
+  .hidden { display: none !important; }
+
+  #loadingMsg, #errorMsg { text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 14px; }
+  #errorMsg { color: var(--critical); }
+
+  @media (max-width: 760px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    form.entry { grid-template-columns: 1fr; }
+    button.primary, button.secondary, .form-note, .form-editing-badge { grid-column: span 1; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>بوفية زمان هوزان</h1>
-        <p>Finance Management System</p>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>بوفية زمان هوزان</h1>
+      <p class="sub">Business Analytics Dashboard</p>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeToggle" title="Toggle theme">🌓</button>
+      <button class="icon-btn" id="settingsBtn" title="API settings">⚙️</button>
+      <button class="icon-btn" id="refreshBtn" title="Refresh data">⟳</button>
+    </div>
+  </header>
+
+  <div id="loadingMsg">Loading dashboard…</div>
+  <div id="errorMsg" class="hidden"></div>
+
+  <div id="dashboard" class="hidden">
+    <div class="tabs" id="periodTabs">
+      <button class="tab active" data-period="daily">Daily</button>
+      <button class="tab" data-period="monthly">Monthly</button>
+      <button class="tab" data-period="yearly">Yearly</button>
+      <button class="tab" data-period="all">All Time</button>
     </div>
 
-    <div class="card">
-        <h3>Daily Entry</h3>
-        <div class="input-group">
-            <label>Daily Revenue</label>
-            <input type="number" id="revenue" placeholder="0.00 SAR" required>
-        </div>
-        <div class="input-group">
-            <label>Daily Expenses (Operational)</label>
-            <input type="number" id="expenses" placeholder="0.00 SAR" required>
-        </div>
-        <button onclick="sendData()" id="submitBtn">Save Entry</button>
-    </div>
+    <div class="kpi-grid" id="kpiGrid"></div>
 
     <div class="card">
-        <h3>Monthly Shares Summary</h3>
-        <div id="loading">Updating calculations...</div>
-        <div class="shares-grid" id="displayArea" style="display: none;">
-            <div class="stat-box full-width">
-                <span class="label">Total Net Profit</span>
-                <span class="value" id="netProfit">0.00 SAR</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Operator (10%)</span>
-                <span class="value" id="operator">0.00 SAR</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Partner 1 (30%)</span>
-                <span class="value" id="p1">0.00 SAR</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Partner 2 (30%)</span>
-                <span class="value" id="p2">0.00 SAR</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Partner 3 (30%)</span>
-                <span class="value" id="p3">0.00 SAR</span>
-            </div>
-        </div>
+      <div class="chart-head">
+        <h3 id="chartTitle">Trend</h3>
+        <button class="link-btn" id="tableViewToggle">View as table</button>
+      </div>
+      <div class="chart-wrap" id="chartWrap"><canvas id="trendChart"></canvas></div>
+      <div class="table-scroll hidden" id="chartTableWrap">
+        <table id="chartTable"><thead></thead><tbody></tbody></table>
+      </div>
+      <div class="legend" id="chartLegend"></div>
     </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="entryFormTitle">Add / Edit Daily Entry</h3>
+        <form class="entry" id="entryForm">
+          <div class="form-editing-badge hidden" id="editingBadge">Editing existing entry — Save will overwrite it</div>
+          <div class="field">
+            <label for="entryDate">Date</label>
+            <input type="date" id="entryDate" required>
+          </div>
+          <div class="field">
+            <label for="entryRevenue">Revenue (SAR)</label>
+            <input type="number" id="entryRevenue" step="0.01" min="0" required>
+          </div>
+          <div class="field">
+            <label for="entryExpenses">Expenses (SAR)</label>
+            <input type="number" id="entryExpenses" step="0.01" min="0" required>
+          </div>
+          <button type="submit" class="primary" id="saveBtn">Save Entry</button>
+          <button type="button" class="secondary hidden" id="cancelEditBtn">Cancel edit / New entry</button>
+          <p class="form-note">Tip: click any row in Recent Entries to load it here for editing.</p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Recent Entries</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Revenue</th><th>Expenses</th><th>Profit</th></tr></thead>
+            <tbody id="recentBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Profit Share Breakdown</h3>
+        <p class="sub" style="margin-top:-8px;color:var(--text-muted);font-size:12px;">Based on Actual Profit (after fixed expenses)</p>
+        <p style="font-size:12px;color:var(--text-secondary);font-weight:700;margin-bottom:6px;">This Month (<span id="shareMonthLabel"></span>)</p>
+        <div class="shares-grid" id="sharesMonth"></div>
+        <p style="font-size:12px;color:var(--text-secondary);font-weight:700;margin:16px 0 6px;">This Year</p>
+        <div class="shares-grid" id="sharesYear"></div>
+      </div>
+
+      <div class="card">
+        <h3>Fixed Monthly Expenses</h3>
+        <div class="fixed-list" id="fixedList"></div>
+        <div class="fixed-total"><span>Total</span><span id="fixedTotal"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop hidden" id="settingsModal">
+  <div class="modal">
+    <h2>Connect your data source</h2>
+    <p>Paste the deployed Google Apps Script Web App URL (ends with <code>/exec</code>). This connects the dashboard to your Business Finance sheet.</p>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="primary" style="width:100%" id="saveApiUrlBtn">Save & Load</button>
+  </div>
 </div>
 
 <script>
-    // Replace with your Google Apps Script Web App URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbxXYtbP1N_3ZxAuqp_u6BBXNO41sBuDJEMPqoWXZkZhYujjeQUPrC69QMCgwHmthSxjiA/exec";
+(function () {
+  var STORAGE_KEY = 'shopTrackerApiUrl';
+  var state = { data: null, period: 'daily', editingDate: null };
+  var chart = null;
 
-    async function sendData() {
-        const rev = document.getElementById('revenue').value;
-        const exp = document.getElementById('expenses').value;
-        const btn = document.getElementById('submitBtn');
+  function apiUrl() { return localStorage.getItem(STORAGE_KEY) || ''; }
 
-        if (!rev || !exp) {
-            alert("Please enter values for both fields.");
-            return;
-        }
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
 
-        btn.disabled = true;
-        btn.innerText = "Saving...";
+  function fmtSAR(n) {
+    n = Number(n) || 0;
+    return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' SAR';
+  }
 
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Essential for Google Apps Script
-                body: JSON.stringify({ revenue: rev, expenses: exp })
-            });
-            alert("Daily data saved successfully!");
-            location.reload();
-        } catch (error) {
-            console.error(error);
-            alert("Error connecting to the database.");
-            btn.disabled = false;
-            btn.innerText = "Save Entry";
-        }
+  function colors() {
+    var s = getComputedStyle(document.documentElement);
+    return {
+      revenue: s.getPropertyValue('--series-revenue').trim(),
+      expense: s.getPropertyValue('--series-expense').trim(),
+      profit: s.getPropertyValue('--series-profit').trim(),
+      grid: s.getPropertyValue('--grid').trim(),
+      axis: s.getPropertyValue('--text-muted').trim(),
+      surface: s.getPropertyValue('--surface-1').trim(),
+      text: s.getPropertyValue('--text-primary').trim(),
+      textSecondary: s.getPropertyValue('--text-secondary').trim()
+    };
+  }
+
+  // ---------- Theme ----------
+  function initTheme() {
+    var saved = localStorage.getItem('shopTrackerTheme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeToggle').addEventListener('click', function () {
+      var current = document.documentElement.getAttribute('data-theme');
+      var isDark = current ? current === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      var next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('shopTrackerTheme', next);
+      if (state.data) renderChart();
+    });
+  }
+
+  // ---------- Settings modal ----------
+  function initSettings() {
+    var modal = document.getElementById('settingsModal');
+    document.getElementById('settingsBtn').addEventListener('click', function () {
+      document.getElementById('apiUrlInput').value = apiUrl();
+      modal.classList.remove('hidden');
+    });
+    document.getElementById('saveApiUrlBtn').addEventListener('click', function () {
+      var val = document.getElementById('apiUrlInput').value.trim();
+      if (!val) return;
+      localStorage.setItem(STORAGE_KEY, val);
+      modal.classList.add('hidden');
+      loadDashboard();
+    });
+    if (!apiUrl()) modal.classList.remove('hidden');
+  }
+
+  // ---------- Data loading ----------
+  function loadDashboard() {
+    if (!apiUrl()) {
+      document.getElementById('loadingMsg').classList.add('hidden');
+      return;
     }
+    document.getElementById('loadingMsg').classList.remove('hidden');
+    document.getElementById('errorMsg').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('hidden');
 
-    async function fetchData() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
+    fetch(apiUrl())
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Unknown error');
+        state.data = json;
+        document.getElementById('loadingMsg').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        renderAll();
+      })
+      .catch(function (err) {
+        document.getElementById('loadingMsg').classList.add('hidden');
+        var el = document.getElementById('errorMsg');
+        el.textContent = 'Could not load data: ' + err.message + '. Check the API URL in settings (⚙️).';
+        el.classList.remove('hidden');
+      });
+  }
 
-            // Format numbers to 2 decimal places with SAR suffix
-            const formatSAR = (val) => Number(val).toLocaleString(undefined, {minimumFractionDigits: 2}) + " SAR";
+  function saveEntry(dateStr, revenue, expenses) {
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    return fetch(apiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ date: dateStr, revenue: revenue, expenses: expenses })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Save failed');
+        state.data = json.data;
+        showToast('Saved ' + dateStr);
+        cancelEdit();
+        renderAll();
+      })
+      .catch(function (err) { showToast('Error: ' + err.message); })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = 'Save Entry';
+      });
+  }
 
-            document.getElementById('netProfit').innerText = formatSAR(data.netProfit);
-            document.getElementById('operator').innerText = formatSAR(data.operator);
-            document.getElementById('p1').innerText = formatSAR(data.p1);
-            document.getElementById('p2').innerText = formatSAR(data.p2);
-            document.getElementById('p3').innerText = formatSAR(data.p3);
+  // ---------- Helpers over data ----------
+  function todayStr() { return state.data.today; }
+  function monthOf(dateStr) { return dateStr.slice(0, 7); }
+  function yearOf(dateStr) { return dateStr.slice(0, 4); }
 
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('displayArea').style.display = 'grid';
-        } catch (error) {
-            document.getElementById('loading').innerText = "Error loading monthly totals.";
-            console.error(error);
-        }
+  function dailyInRange(fromStr, toStr) {
+    return state.data.daily.filter(function (d) { return d.date >= fromStr && d.date <= toStr; });
+  }
+
+  function sumEntries(list) {
+    return list.reduce(function (acc, d) {
+      acc.revenue += d.revenue; acc.expenses += d.expenses; acc.profit += d.profit;
+      return acc;
+    }, { revenue: 0, expenses: 0, profit: 0 });
+  }
+
+  function addDays(dateStr, n) {
+    var d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function monthlyRow(month) {
+    return state.data.monthly.find(function (m) { return m.month === month; });
+  }
+
+  function shiftMonth(month, n) {
+    var y = Number(month.slice(0, 4)), m = Number(month.slice(5, 7)) - 1;
+    var d = new Date(y, m + n, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  // ---------- KPI rendering ----------
+  function deltaEl(current, previous) {
+    var span = document.createElement('div');
+    if (previous === 0 && current === 0) { span.className = 'delta flat'; span.textContent = 'No change'; return span; }
+    if (previous === 0) {
+      var goodNew = current >= 0;
+      span.className = 'delta ' + (goodNew ? 'up' : 'down');
+      span.textContent = (goodNew ? '▲ ' : '▼ ') + 'new activity';
+      return span;
     }
+    var pct = ((current - previous) / Math.abs(previous)) * 100;
+    var up = pct >= 0;
+    span.className = 'delta ' + (up ? 'up' : 'down');
+    span.textContent = (up ? '▲ ' : '▼ ') + Math.abs(pct).toFixed(1) + '% vs prior period';
+    return span;
+  }
 
-    // Initialize fetch on page load
-    fetchData();
+  function makeTile(label, value, previous, plain) {
+    var tile = document.createElement('div');
+    tile.className = 'stat-tile';
+    var l = document.createElement('div'); l.className = 'label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'value' + (value < 0 ? ' negative' : ''); v.textContent = plain ? String(value) : fmtSAR(value);
+    tile.appendChild(l); tile.appendChild(v);
+    if (previous !== undefined) tile.appendChild(deltaEl(value, previous));
+    return tile;
+  }
+
+  function renderKPIs() {
+    var grid = document.getElementById('kpiGrid');
+    grid.innerHTML = '';
+    var period = state.period;
+    var today = todayStr();
+
+    if (period === 'daily') {
+      var cur = dailyInRange(today, today)[0] || { revenue: 0, expenses: 0, profit: 0 };
+      var yesterday = addDays(today, -1);
+      var prev = dailyInRange(yesterday, yesterday)[0] || { revenue: 0, expenses: 0, profit: 0 };
+      document.getElementById('chartTitle').textContent = 'Last 30 Days — Daily Trend';
+      grid.appendChild(makeTile('Today Revenue', cur.revenue, prev.revenue));
+      grid.appendChild(makeTile('Today Expenses', cur.expenses, prev.expenses));
+      grid.appendChild(makeTile('Today Profit', cur.profit, prev.profit));
+      grid.appendChild(makeTile('Yesterday Profit', prev.profit));
+    } else if (period === 'monthly') {
+      var month = monthOf(today);
+      var row = monthlyRow(month) || { revenue: 0, dailyExpenses: 0, fixedExpenses: state.data.fixedExpensesTotal, actualProfit: 0 };
+      var prevMonth = shiftMonth(month, -1);
+      var prevRow = monthlyRow(prevMonth) || { revenue: 0, dailyExpenses: 0, actualProfit: 0 };
+      document.getElementById('chartTitle').textContent = 'This Month — Day by Day';
+      grid.appendChild(makeTile('Month Revenue', row.revenue, prevRow.revenue));
+      grid.appendChild(makeTile('Month Expenses', row.dailyExpenses + row.fixedExpenses, prevRow.dailyExpenses + (prevRow.fixedExpenses || 0)));
+      grid.appendChild(makeTile('Actual Profit', row.actualProfit, prevRow.actualProfit));
+      grid.appendChild(makeTile('Fixed Expenses', row.fixedExpenses));
+    } else if (period === 'yearly') {
+      var year = yearOf(today);
+      var rows = state.data.monthly.filter(function (m) { return m.month.slice(0, 4) === year; });
+      var prevRows = state.data.monthly.filter(function (m) { return m.month.slice(0, 4) === String(Number(year) - 1); });
+      var s1 = rows.reduce(function (a, r) { a.revenue += r.revenue; a.expenses += r.dailyExpenses + r.fixedExpenses; a.profit += r.actualProfit; return a; }, { revenue: 0, expenses: 0, profit: 0 });
+      var s0 = prevRows.reduce(function (a, r) { a.revenue += r.revenue; a.expenses += r.dailyExpenses + r.fixedExpenses; a.profit += r.actualProfit; return a; }, { revenue: 0, expenses: 0, profit: 0 });
+      document.getElementById('chartTitle').textContent = year + ' — Month by Month';
+      grid.appendChild(makeTile('Year Revenue', s1.revenue, s0.revenue));
+      grid.appendChild(makeTile('Year Expenses', s1.expenses, s0.expenses));
+      grid.appendChild(makeTile('Year Profit', s1.profit, s0.profit));
+      grid.appendChild(makeTile('Prior Year Profit', s0.profit));
+    } else {
+      var all = state.data.monthly.reduce(function (a, r) { a.revenue += r.revenue; a.expenses += r.dailyExpenses + r.fixedExpenses; a.profit += r.actualProfit; return a; }, { revenue: 0, expenses: 0, profit: 0 });
+      document.getElementById('chartTitle').textContent = 'All Time — Month by Month';
+      grid.appendChild(makeTile('All-Time Revenue', all.revenue));
+      grid.appendChild(makeTile('All-Time Expenses', all.expenses));
+      grid.appendChild(makeTile('All-Time Profit', all.profit));
+      grid.appendChild(makeTile('Months Tracked', state.data.monthly.length, undefined, true));
+    }
+  }
+
+  // ---------- Chart ----------
+  function chartSeriesFor(period) {
+    var today = todayStr();
+    if (period === 'daily') {
+      var from = addDays(today, -29);
+      var rows = dailyInRange(from, today);
+      return {
+        labels: rows.map(function (d) { return d.date.slice(5); } ),
+        revenue: rows.map(function (d) { return d.revenue; }),
+        expenses: rows.map(function (d) { return d.expenses; }),
+        profit: rows.map(function (d) { return d.profit; })
+      };
+    }
+    if (period === 'monthly') {
+      var month = monthOf(today);
+      var rows = state.data.daily.filter(function (d) { return monthOf(d.date) === month; });
+      return {
+        labels: rows.map(function (d) { return d.date.slice(8); }),
+        revenue: rows.map(function (d) { return d.revenue; }),
+        expenses: rows.map(function (d) { return d.expenses; }),
+        profit: rows.map(function (d) { return d.profit; })
+      };
+    }
+    if (period === 'yearly') {
+      var year = yearOf(today);
+      var rows = state.data.monthly.filter(function (m) { return m.month.slice(0, 4) === year; });
+      return {
+        labels: rows.map(function (m) { return m.month.slice(5); }),
+        revenue: rows.map(function (m) { return m.revenue; }),
+        expenses: rows.map(function (m) { return m.dailyExpenses + m.fixedExpenses; }),
+        profit: rows.map(function (m) { return m.actualProfit; })
+      };
+    }
+    var rows = state.data.monthly;
+    return {
+      labels: rows.map(function (m) { return m.month; }),
+      revenue: rows.map(function (m) { return m.revenue; }),
+      expenses: rows.map(function (m) { return m.dailyExpenses + m.fixedExpenses; }),
+      profit: rows.map(function (m) { return m.actualProfit; })
+    };
+  }
+
+  function renderLegend(c) {
+    var el = document.getElementById('chartLegend');
+    el.innerHTML = '';
+    [['Revenue', c.revenue], ['Expenses', c.expense], ['Net Profit', c.profit]].forEach(function (pair) {
+      var item = document.createElement('div'); item.className = 'legend-item';
+      var sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = pair[1];
+      item.appendChild(sw);
+      item.appendChild(document.createTextNode(pair[0]));
+      el.appendChild(item);
+    });
+  }
+
+  function renderChart() {
+    var c = colors();
+    var series = chartSeriesFor(state.period);
+    renderLegend(c);
+
+    var ctx = document.getElementById('trendChart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      data: {
+        labels: series.labels,
+        datasets: [
+          { type: 'bar', label: 'Revenue', data: series.revenue, backgroundColor: c.revenue, borderRadius: 4, order: 2 },
+          { type: 'bar', label: 'Expenses', data: series.expenses, backgroundColor: c.expense, borderRadius: 4, order: 2 },
+          { type: 'line', label: 'Net Profit', data: series.profit, borderColor: c.profit, backgroundColor: c.profit, tension: 0.25, pointRadius: 3, borderWidth: 2, order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: c.surface, titleColor: c.text, bodyColor: c.textSecondary,
+            borderColor: c.grid, borderWidth: 1, padding: 10,
+            callbacks: { label: function (item) { return item.dataset.label + ': ' + fmtSAR(item.parsed.y); } }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: c.axis, maxRotation: 0, autoSkip: true } },
+          y: { grid: { color: c.grid }, ticks: { color: c.axis, callback: function (v) { return v; } } }
+        }
+      }
+    });
+
+    renderChartTable(series);
+  }
+
+  function renderChartTable(series) {
+    var table = document.getElementById('chartTable');
+    var thead = table.querySelector('thead'), tbody = table.querySelector('tbody');
+    thead.innerHTML = '<tr><th>Period</th><th>Revenue</th><th>Expenses</th><th>Profit</th></tr>';
+    tbody.innerHTML = '';
+    series.labels.forEach(function (label, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + label + '</td><td>' + fmtSAR(series.revenue[i]) + '</td><td>' + fmtSAR(series.expenses[i]) + '</td><td>' + fmtSAR(series.profit[i]) + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function initTableToggle() {
+    document.getElementById('tableViewToggle').addEventListener('click', function () {
+      var chartWrap = document.getElementById('chartWrap');
+      var tableWrap = document.getElementById('chartTableWrap');
+      var showingTable = !tableWrap.classList.contains('hidden');
+      chartWrap.classList.toggle('hidden', !showingTable);
+      tableWrap.classList.toggle('hidden', showingTable);
+      this.textContent = showingTable ? 'View as table' : 'View as chart';
+    });
+  }
+
+  // ---------- Recent entries table ----------
+  function renderRecentEntries() {
+    var body = document.getElementById('recentBody');
+    body.innerHTML = '';
+    var rows = state.data.daily.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; }).slice(0, 20);
+    rows.forEach(function (d) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + d.date + '</td><td>' + fmtSAR(d.revenue) + '</td><td>' + fmtSAR(d.expenses) + '</td><td' + (d.profit < 0 ? ' style="color:var(--critical)"' : '') + '>' + fmtSAR(d.profit) + '</td>';
+      tr.addEventListener('click', function () { loadEntryIntoForm(d); });
+      body.appendChild(tr);
+    });
+  }
+
+  // ---------- Entry form ----------
+  function loadEntryIntoForm(entry) {
+    document.getElementById('entryDate').value = entry.date;
+    document.getElementById('entryRevenue').value = entry.revenue;
+    document.getElementById('entryExpenses').value = entry.expenses;
+    state.editingDate = entry.date;
+    document.getElementById('editingBadge').classList.remove('hidden');
+    document.getElementById('cancelEditBtn').classList.remove('hidden');
+    document.getElementById('entryFormTitle').textContent = 'Editing ' + entry.date;
+    window.scrollTo({ top: document.getElementById('entryForm').offsetTop - 20, behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    state.editingDate = null;
+    document.getElementById('entryForm').reset();
+    document.getElementById('entryDate').value = todayStr();
+    document.getElementById('editingBadge').classList.add('hidden');
+    document.getElementById('cancelEditBtn').classList.add('hidden');
+    document.getElementById('entryFormTitle').textContent = 'Add / Edit Daily Entry';
+  }
+
+  function initForm() {
+    document.getElementById('entryForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var date = document.getElementById('entryDate').value;
+      var revenue = parseFloat(document.getElementById('entryRevenue').value) || 0;
+      var expenses = parseFloat(document.getElementById('entryExpenses').value) || 0;
+      if (!date) return;
+      saveEntry(date, revenue, expenses);
+    });
+    document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+  }
+
+  // ---------- Shares ----------
+  function renderShareBoxes(container, actualProfit) {
+    var shares = (state.data.shares) || { operator: 0.10, partner1: 0.30, partner2: 0.30, partner3: 0.30 };
+    container.innerHTML = '';
+    [
+      ['Operator (' + (shares.operator * 100) + '%)', actualProfit * shares.operator],
+      ['Partner 1 (' + (shares.partner1 * 100) + '%)', actualProfit * shares.partner1],
+      ['Partner 2 (' + (shares.partner2 * 100) + '%)', actualProfit * shares.partner2],
+      ['Partner 3 (' + (shares.partner3 * 100) + '%)', actualProfit * shares.partner3]
+    ].forEach(function (pair) {
+      var box = document.createElement('div'); box.className = 'share-box';
+      var who = document.createElement('div'); who.className = 'who'; who.textContent = pair[0];
+      var amt = document.createElement('div'); amt.className = 'amt' + (pair[1] < 0 ? ' negative' : ''); amt.textContent = fmtSAR(pair[1]);
+      if (pair[1] < 0) amt.style.color = 'var(--critical)';
+      box.appendChild(who); box.appendChild(amt);
+      container.appendChild(box);
+    });
+  }
+
+  function renderShares() {
+    var month = monthOf(todayStr());
+    var row = monthlyRow(month) || { actualProfit: 0 };
+    document.getElementById('shareMonthLabel').textContent = month;
+    renderShareBoxes(document.getElementById('sharesMonth'), row.actualProfit);
+
+    var year = yearOf(todayStr());
+    var yearProfit = state.data.monthly.filter(function (m) { return m.month.slice(0, 4) === year; })
+      .reduce(function (a, m) { return a + m.actualProfit; }, 0);
+    renderShareBoxes(document.getElementById('sharesYear'), yearProfit);
+  }
+
+  // ---------- Fixed expenses ----------
+  function renderFixed() {
+    var list = document.getElementById('fixedList');
+    list.innerHTML = '';
+    state.data.fixedExpenses.forEach(function (item) {
+      var row = document.createElement('div'); row.className = 'fixed-row';
+      row.innerHTML = '<span class="name">' + item.name + '</span><span>' + fmtSAR(item.amount) + '</span>';
+      list.appendChild(row);
+    });
+    document.getElementById('fixedTotal').textContent = fmtSAR(state.data.fixedExpensesTotal);
+  }
+
+  // ---------- Tabs ----------
+  function initTabs() {
+    document.querySelectorAll('#periodTabs .tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#periodTabs .tab').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        state.period = btn.dataset.period;
+        renderKPIs();
+        renderChart();
+      });
+    });
+  }
+
+  function renderAll() {
+    if (!document.getElementById('entryDate').value) document.getElementById('entryDate').value = todayStr();
+    renderKPIs();
+    renderChart();
+    renderRecentEntries();
+    renderShares();
+    renderFixed();
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+  initTheme();
+  initSettings();
+  initTabs();
+  initForm();
+  initTableToggle();
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+  loadDashboard();
+})();
 </script>
-
 </body>
 </html>
