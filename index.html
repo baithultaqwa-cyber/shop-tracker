@@ -316,10 +316,11 @@
 <script>
 (function () {
   var STORAGE_KEY = 'shopTrackerApiUrl';
+  var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbx3qmy7UoQxDQqf8RHAPcjcMeJAtcdVIfEuke6MRUFWTEmJu-yOgPMPYkdpWO8yQj-YzA/exec';
   var state = { data: null, period: 'daily', editingDate: null };
   var chart = null;
 
-  function apiUrl() { return localStorage.getItem(STORAGE_KEY) || ''; }
+  function apiUrl() { return localStorage.getItem(STORAGE_KEY) || DEFAULT_API_URL; }
 
   function showToast(msg) {
     var t = document.getElementById('toast');
@@ -375,7 +376,6 @@
       modal.classList.add('hidden');
       loadDashboard();
     });
-    if (!apiUrl()) modal.classList.remove('hidden');
   }
 
   // ---------- Data loading ----------
